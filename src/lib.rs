@@ -1,3 +1,6 @@
+use std::fs::File;
+use std::io::prelude::*;
+
 type BHashMap<K, V> = std::collections::HashMap<K, V>;
 // type BHashMap<K, V> = FxHashMap<K, V>;
 // type BHashMap<K, V> = ShardMap<K, V>;
@@ -20,22 +23,40 @@ type BHashMap<K, V> = std::collections::HashMap<K, V>;
 
 type PageID = usize;
 
-struct Page {}
+struct Page {
+    PID: PageID,
+    data: [i64; 512],
+}
 
-impl Page {}
+impl Page {
+    fn write(&self) {
+        let filename = format!("page_{}", self.PID);
+        let file = File::create(filename);
+
+        match file {
+            Ok(mut fp) => {
+                // This is the fastest way to do this
+                // I do not know all of the conditions that are needed to make this not break
+                // TODO: Prove that this works always
+                let bytes: [u8; 4096] = unsafe { std::mem::transmute(self.data) };
+                // TODO: Use this result
+                fp.write_all(&bytes).expect("Should be able to write.");
+            }
+            Err(..) => {
+                println!("Error: Cannot open database file.");
+            }
+        }
+    }
+}
 
 struct Bufferpool {
     pages: BHashMap<PageID, Page>,
 }
 
 impl Bufferpool {
-    fn read(&self, index: usize) {
-        
-    }
+    fn read(&self, index: usize) {}
 
-    fn insert(&mut self, index: usize, value: usize) {
-        
-    }
+    fn insert(&mut self, index: usize, value: usize) {}
 }
 
 #[cfg(test)]

@@ -28,7 +28,15 @@ struct Bufferpool {
     pages: BHashMap<PageID, Page>,
 }
 
-impl Bufferpool {}
+impl Bufferpool {
+    fn read(&self, index: usize) {
+        
+    }
+
+    fn insert(&mut self, index: usize, value: usize) {
+        
+    }
+}
 
 #[cfg(test)]
 mod tests {

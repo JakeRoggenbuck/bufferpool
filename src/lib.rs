@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::prelude::*;
+use std::sync::{Arc, Mutex};
 
 type BHashMap<K, V> = std::collections::HashMap<K, V>;
 // type BHashMap<K, V> = FxHashMap<K, V>;
@@ -24,13 +25,27 @@ type BHashMap<K, V> = std::collections::HashMap<K, V>;
 type PageID = usize;
 
 struct Page {
-    PID: PageID,
-    data: [i64; 512],
+    pid: PageID,
+    data: Option<[i64; 512]>,
 }
 
 impl Page {
+    fn open(&mut self) {
+        let data = self.read();
+
+        self.data = Some(data);
+    }
+
+    fn new(pid: PageID) -> Self {
+        Page { pid, data: None }
+    }
+
+    fn get_page_path(&self) -> String {
+        format!("page_{}", self.pid)
+    }
+
     fn write(&self) {
-        let filename = format!("page_{}", self.PID);
+        let filename = self.get_page_path();
         let file = File::create(filename);
 
         match file {
@@ -38,25 +53,60 @@ impl Page {
                 // This is the fastest way to do this
                 // I do not know all of the conditions that are needed to make this not break
                 // TODO: Prove that this works always
-                let bytes: [u8; 4096] = unsafe { std::mem::transmute(self.data) };
-                // TODO: Use this result
-                fp.write_all(&bytes).expect("Should be able to write.");
+                if let Some(d) = self.data {
+                    let bytes: [u8; 4096] = unsafe { std::mem::transmute(d) };
+                    // TODO: Use this result
+                    fp.write_all(&bytes).expect("Should be able to write.");
+                }
             }
             Err(..) => {
                 println!("Error: Cannot open database file.");
             }
         }
     }
+
+    fn read(&self) -> [i64; 512] {
+        let filename = self.get_page_path();
+        let mut file = File::open(filename).expect("Should open file.");
+        let mut buf: [u8; 4096] = [0; 4096];
+
+        let _ = file.read(&mut buf[..]).expect("Should read.");
+
+        // TODO: Make sure this works as expected always
+        let values: [i64; 512] = unsafe { std::mem::transmute(buf) };
+        return values;
+    }
 }
 
 struct Bufferpool {
-    pages: BHashMap<PageID, Page>,
+    pages: BHashMap<PageID, Arc<Mutex<Page>>>,
 }
 
 impl Bufferpool {
     fn read(&self, index: usize) {}
 
-    fn insert(&mut self, index: usize, value: usize) {}
+    fn insert(&mut self, index: usize, value: usize) {
+        let pid: usize = index / 512;
+        let index_in_page = index % 512;
+
+        let mut page: Arc<Mutex<Page>>;
+
+        if self.pages.contains_key(&index_in_page) {
+            // Open the page cause it was not opened
+            let mut new_page = Page::new(pid);
+            new_page.open();
+
+            // Make an Arc
+            page = Arc::new(Mutex::new(new_page));
+            self.pages.insert(pid, page);
+        } else {
+            // Get the page because it was opened
+            let poption = self.pages.get(&pid);
+            if let Some(p) = poption {
+                page = p.clone();
+            }
+        }
+    }
 }
 
 #[cfg(test)]

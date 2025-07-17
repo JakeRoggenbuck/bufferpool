@@ -1,3 +1,35 @@
+type BHashMap<K, V> = std::collections::HashMap<K, V>;
+// type BHashMap<K, V> = FxHashMap<K, V>;
+// type BHashMap<K, V> = ShardMap<K, V>;
+// type BHashMap<K, V> = BTreeMap<K, V>;
+
+// Idea for ID values:
+// When you insert into a page, if's full, you then allocate a new page
+// Each time you insert, this record gets a Record ID, and the value corresponds to when it was
+// inserted. This tells us the location in memory. Using this, we can tell both which page it
+// should be in, and where in the page it should be located
+//
+// If I want ID 0, I go to the 0th page, and the 0th value
+// If I want ID 100, I go to the 0th page, and the 100th value
+// If I want ID 513, I go to the 1st page, and the 0th value
+//
+// This way, when we check for a value, we might see that that page is not actually loaded into
+// memory, this will cause us to find the file and then load it into the bufferpool.
+//
+// The page is `index // 512` and the value index is `index % 512`
+
+type PageID = usize;
+
+struct Page {}
+
+impl Page {}
+
+struct Bufferpool {
+    pages: BHashMap<PageID, Page>,
+}
+
+impl Bufferpool {}
+
 #[cfg(test)]
 mod tests {
     use super::*;

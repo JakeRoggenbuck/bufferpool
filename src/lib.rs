@@ -173,23 +173,30 @@ impl Bufferpool {
         let pid: usize = index / 512;
         let index_in_page = index % 512;
 
+        println!("{:?}", self.pages);
+
         if self.pages.contains_key(&pid) {
             // Get the page because it was opened
             let poption = self.pages.get(&pid);
 
             let mut b = poption.unwrap().lock().unwrap();
             b.set_value(index_in_page, value);
+            // TODO: Should this always write?
+            // If so, it should do so async
+            b.write_page();
+        } else {
+            // Open the page cause it was not opened
+            let mut new_page = Page::new(pid);
+            new_page.open();
+            new_page.set_value(index_in_page, value);
+            // TODO: Should this always write?
+            // If so, it should do so async
+            new_page.write_page();
 
-            return;
+            // Make an Arc
+            let page = Some(Arc::new(Mutex::new(new_page)));
+            self.pages.insert(pid, page.clone().unwrap());
         }
-
-        // Open the page cause it was not opened
-        let mut new_page = Page::new(pid);
-        new_page.open();
-
-        // Make an Arc
-        let page = Some(Arc::new(Mutex::new(new_page)));
-        self.pages.insert(pid, page.clone().unwrap());
     }
 }
 
@@ -269,9 +276,9 @@ mod tests {
         bpool.insert(0, 100);
 
         // Read the 0th value
-        //let val = bpool.fetch(0);
+        let val = bpool.fetch(0);
 
         // Read the first value
-        //assert_eq!(val, Some(100));
+        assert_eq!(val, Some(100));
     }
 }

@@ -280,5 +280,18 @@ mod tests {
 
         // Read the first value
         assert_eq!(val, Some(100));
+
+        for x in 0..600 {
+            bpool.insert(x + 1, 2 * (x + 1) as i64);
+        }
+
+        assert_eq!(bpool.fetch(1), Some(2));
+        assert_eq!(bpool.fetch(2), Some(4));
+        assert_eq!(bpool.fetch(100), Some(200));
+
+        assert_eq!(bpool.fetch(500), Some(1000));
+
+        // Read after first page!
+        assert_eq!(bpool.fetch(550), Some(1100));
     }
 }

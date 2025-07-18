@@ -47,7 +47,7 @@ impl Page {
     }
 
     fn get_page_path(&self) -> String {
-        format!("page_{}", self.pid)
+        format!("page_{}.data", self.pid)
     }
 
     pub fn write_page(&self) {

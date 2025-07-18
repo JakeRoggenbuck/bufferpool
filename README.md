@@ -1,5 +1,7 @@
 # bufferpool
 
+Database bufferpool implementation written in Rust
+
 ### What is a bufferpool
 
 A bufferpool is a part of a database that handles what data gets kept in memory and what gets taken out of memory. Of course, the kernel keeps some disk pages in cache as well, but the cache in the bufferpool is on top of that cache. What makes a bufferpool most interesting, is the replacement strategy, and the way that you access the right value from the cache.

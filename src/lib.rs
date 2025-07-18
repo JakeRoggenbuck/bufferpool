@@ -2,6 +2,8 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::sync::{Arc, Mutex};
 
+const PAGE_SIZE: usize = 4096;
+
 // I had planned to test many different hashmap implementations
 type BHashMap<K, V> = std::collections::HashMap<K, V>;
 
@@ -59,7 +61,7 @@ impl Page {
                 // I do not know all of the conditions that are needed to make this not break
                 // TODO: Prove that this works always
                 if let Some(d) = self.data {
-                    let bytes: [u8; 4096] = unsafe { std::mem::transmute(d) };
+                    let bytes: [u8; PAGE_SIZE] = unsafe { std::mem::transmute(d) };
                     // TODO: Use this result
                     fp.write_all(&bytes).expect("Should be able to write.");
                 }
@@ -74,7 +76,7 @@ impl Page {
     pub fn read_page(&self) -> [i64; 512] {
         let filename = self.get_page_path();
         let mut file = File::open(filename).expect("Should open file.");
-        let mut buf: [u8; 4096] = [0; 4096];
+        let mut buf: [u8; 4096] = [0; PAGE_SIZE];
 
         let _ = file.read(&mut buf[..]).expect("Should read.");
 
@@ -111,7 +113,7 @@ impl Page {
     }
 
     pub fn capacity(&self) -> usize {
-        4096
+        PAGE_SIZE
     }
 }
 
@@ -231,7 +233,7 @@ mod tests {
             page_1.write_page();
 
             assert_eq!(page_1.size(), 0);
-            assert_eq!(page_1.capacity(), 4096);
+            assert_eq!(page_1.capacity(), PAGE_SIZE);
         }
 
         assert_eq!(bpool.size(), 1);

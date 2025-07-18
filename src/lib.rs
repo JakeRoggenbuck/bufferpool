@@ -25,20 +25,20 @@ type BHashMap<K, V> = std::collections::HashMap<K, V>;
 type PageID = usize;
 
 #[derive(Debug)]
-struct Page {
+pub struct Page {
     pid: PageID,
     data: Option<[i64; 512]>,
     index: usize,
 }
 
 impl Page {
-    fn open(&mut self) {
+    pub fn open(&mut self) {
         let data = self.read_page();
 
         self.data = Some(data);
     }
 
-    fn new(pid: PageID) -> Self {
+    pub fn new(pid: PageID) -> Self {
         Page {
             pid,
             data: None,
@@ -50,7 +50,7 @@ impl Page {
         format!("page_{}", self.pid)
     }
 
-    fn write_page(&self) {
+    pub fn write_page(&self) {
         let filename = self.get_page_path();
         let file = File::create(filename);
 
@@ -71,7 +71,7 @@ impl Page {
         }
     }
 
-    fn read_page(&self) -> [i64; 512] {
+    pub fn read_page(&self) -> [i64; 512] {
         let filename = self.get_page_path();
         let mut file = File::open(filename).expect("Should open file.");
         let mut buf: [u8; 4096] = [0; 4096];
@@ -83,7 +83,7 @@ impl Page {
         return values;
     }
 
-    fn set_value(&mut self, index: usize, value: i64) {
+    pub fn set_value(&mut self, index: usize, value: i64) {
         if let Some(d) = &mut self.data {
             d[index] = value;
         }
@@ -91,11 +91,11 @@ impl Page {
         self.index += 1;
     }
 
-    fn set_all_values(&mut self, input: [i64; 512]) {
+    pub fn set_all_values(&mut self, input: [i64; 512]) {
         self.data = Some(input);
     }
 
-    fn get_value(&self, index: usize) -> Option<i64> {
+    pub fn get_value(&self, index: usize) -> Option<i64> {
         if let Some(d) = self.data {
             return Some(d[index]);
         }
@@ -103,16 +103,16 @@ impl Page {
         None
     }
 
-    fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.index
     }
 
-    fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         4096
     }
 }
 
-struct Bufferpool {
+pub struct Bufferpool {
     // Right now, there is no removal strategy
     pages: BHashMap<PageID, Arc<Mutex<Page>>>,
     page_index: PageID,
@@ -120,7 +120,7 @@ struct Bufferpool {
 }
 
 impl Bufferpool {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Bufferpool {
             pages: BHashMap::new(),
             page_index: 0,
@@ -128,11 +128,11 @@ impl Bufferpool {
         }
     }
 
-    fn set_page_limit(&mut self, limit: usize) {
+    pub fn set_page_limit(&mut self, limit: usize) {
         self.page_limit = limit;
     }
 
-    fn create_page(&mut self) -> Arc<Mutex<Page>> {
+    pub fn create_page(&mut self) -> Arc<Mutex<Page>> {
         let p = Page::new(self.page_index);
         let page = Arc::new(Mutex::new(p));
 
@@ -141,19 +141,19 @@ impl Bufferpool {
         return page.clone();
     }
 
-    fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.page_index
     }
 
-    fn empty(&self) -> bool {
+    pub fn empty(&self) -> bool {
         self.size() == 0
     }
 
-    fn full(&self) -> bool {
+    pub fn full(&self) -> bool {
         self.page_index >= self.page_limit
     }
 
-    fn fetch(&self, index: usize) -> Option<i64> {
+    pub fn fetch(&self, index: usize) -> Option<i64> {
         let pid: usize = index / 512;
         let index_in_page = index % 512;
 
@@ -169,7 +169,7 @@ impl Bufferpool {
         None
     }
 
-    fn insert(&mut self, index: usize, value: i64) {
+    pub fn insert(&mut self, index: usize, value: i64) {
         let pid: usize = index / 512;
         let index_in_page = index % 512;
 

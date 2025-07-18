@@ -44,7 +44,7 @@ impl Page {
         format!("page_{}", self.pid)
     }
 
-    fn write(&self) {
+    fn write_page(&self) {
         let filename = self.get_page_path();
         let file = File::create(filename);
 
@@ -65,7 +65,7 @@ impl Page {
         }
     }
 
-    fn read(&self) -> [i64; 512] {
+    fn read_page(&self) -> [i64; 512] {
         let filename = self.get_page_path();
         let mut file = File::open(filename).expect("Should open file.");
         let mut buf: [u8; 4096] = [0; 4096];
@@ -76,6 +76,20 @@ impl Page {
         let values: [i64; 512] = unsafe { std::mem::transmute(buf) };
         return values;
     }
+
+    fn write_value(&mut self, index: usize, value: i64) {
+        if let Some(mut d) = self.data {
+            d[index] = value;
+        }
+    }
+
+    fn read_value(&self, index: usize) -> Option<i64> {
+        if let Some(d) = self.data {
+            return Some(d[index]);
+        }
+
+        None
+    }
 }
 
 struct Bufferpool {
@@ -85,11 +99,11 @@ struct Bufferpool {
 impl Bufferpool {
     fn read(&self, index: usize) {}
 
-    fn insert(&mut self, index: usize, value: usize) {
+    fn insert(&mut self, index: usize, value: i64) {
         let pid: usize = index / 512;
         let index_in_page = index % 512;
 
-        let mut page: Arc<Mutex<Page>>;
+        let mut page: Option<Arc<Mutex<Page>>> = None;
 
         if self.pages.contains_key(&index_in_page) {
             // Open the page cause it was not opened
@@ -97,14 +111,19 @@ impl Bufferpool {
             new_page.open();
 
             // Make an Arc
-            page = Arc::new(Mutex::new(new_page));
-            self.pages.insert(pid, page);
+            page = Some(Arc::new(Mutex::new(new_page)));
+            self.pages.insert(pid, page.clone().unwrap());
         } else {
             // Get the page because it was opened
             let poption = self.pages.get(&pid);
             if let Some(p) = poption {
-                page = p.clone();
+                page = Some(p.clone());
             }
+        }
+
+        if let Some(p) = page {
+            let mut b = p.lock().unwrap();
+            b.write_value(index_in_page, value);
         }
     }
 }

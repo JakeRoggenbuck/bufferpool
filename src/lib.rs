@@ -31,7 +31,7 @@ struct Page {
 
 impl Page {
     fn open(&mut self) {
-        let data = self.read();
+        let data = self.read_page();
 
         self.data = Some(data);
     }
@@ -93,11 +93,26 @@ impl Page {
 }
 
 struct Bufferpool {
+    // Right now, there is no removal strategy
     pages: BHashMap<PageID, Arc<Mutex<Page>>>,
 }
 
 impl Bufferpool {
-    fn read(&self, index: usize) {}
+    fn read(&self, index: usize) -> Option<i64> {
+        let pid: usize = index / 512;
+        let index_in_page = index % 512;
+
+        if self.pages.contains_key(&pid) {
+            let page = self.pages.get(&pid);
+
+            if let Some(p) = page {
+                let b = p.lock().unwrap();
+                return b.read_value(index_in_page);
+            }
+        }
+
+        None
+    }
 
     fn insert(&mut self, index: usize, value: i64) {
         let pid: usize = index / 512;
@@ -105,7 +120,13 @@ impl Bufferpool {
 
         let mut page: Option<Arc<Mutex<Page>>> = None;
 
-        if self.pages.contains_key(&index_in_page) {
+        if self.pages.contains_key(&pid) {
+            // Get the page because it was opened
+            let poption = self.pages.get(&pid);
+            if let Some(p) = poption {
+                page = Some(p.clone());
+            }
+        } else {
             // Open the page cause it was not opened
             let mut new_page = Page::new(pid);
             new_page.open();
@@ -113,12 +134,6 @@ impl Bufferpool {
             // Make an Arc
             page = Some(Arc::new(Mutex::new(new_page)));
             self.pages.insert(pid, page.clone().unwrap());
-        } else {
-            // Get the page because it was opened
-            let poption = self.pages.get(&pid);
-            if let Some(p) = poption {
-                page = Some(p.clone());
-            }
         }
 
         if let Some(p) = page {

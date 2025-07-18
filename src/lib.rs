@@ -84,7 +84,7 @@ impl Page {
     }
 
     fn set_value(&mut self, index: usize, value: i64) {
-        if let Some(mut d) = self.data {
+        if let Some(d) = &mut self.data {
             d[index] = value;
         }
 

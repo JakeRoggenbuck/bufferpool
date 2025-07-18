@@ -2,10 +2,8 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::sync::{Arc, Mutex};
 
+// I had planned to test many different hashmap implementations
 type BHashMap<K, V> = std::collections::HashMap<K, V>;
-// type BHashMap<K, V> = FxHashMap<K, V>;
-// type BHashMap<K, V> = ShardMap<K, V>;
-// type BHashMap<K, V> = BTreeMap<K, V>;
 
 // Idea for ID values:
 // When you insert into a page, if's full, you then allocate a new page
@@ -50,6 +48,7 @@ impl Page {
         format!("page_{}.data", self.pid)
     }
 
+    // WRITE functions are for writing a Page from disk and not changing any state
     pub fn write_page(&self) {
         let filename = self.get_page_path();
         let file = File::create(filename);
@@ -71,6 +70,7 @@ impl Page {
         }
     }
 
+    // READ functions are for pulling a Page from disk
     pub fn read_page(&self) -> [i64; 512] {
         let filename = self.get_page_path();
         let mut file = File::open(filename).expect("Should open file.");
@@ -83,6 +83,7 @@ impl Page {
         return values;
     }
 
+    // SET functions are for changing internal state of a Page
     pub fn set_value(&mut self, index: usize, value: i64) {
         if let Some(d) = &mut self.data {
             d[index] = value;
@@ -91,10 +92,12 @@ impl Page {
         self.index += 1;
     }
 
+    // SET functions are for changing internal state of a Page
     pub fn set_all_values(&mut self, input: [i64; 512]) {
         self.data = Some(input);
     }
 
+    // GET functions are for getting internal state of a Page
     pub fn get_value(&self, index: usize) -> Option<i64> {
         if let Some(d) = self.data {
             return Some(d[index]);

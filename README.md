@@ -1,5 +1,8 @@
 # bufferpool
 
+[![Rust](https://img.shields.io/badge/Rust-1A5D8A?style=for-the-badge&logo=rust&logoColor=white)](https://github.com/JakeRoggenbuck?tab=repositories&q=&type=&language=rust&sort=stargazers)
+[![CI](https://img.shields.io/github/actions/workflow/status/jakeroggenbuck/bufferpool/rust.yml?branch=main&style=for-the-badge)](https://github.com/JakeRoggenbuck/bufferpool/actions)
+
 Database bufferpool implementation written in Rust
 
 ### What is a bufferpool

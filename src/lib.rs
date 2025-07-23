@@ -46,13 +46,15 @@ impl Page {
         }
     }
 
-    fn get_page_path(&self) -> String {
+    pub fn get_page_path(&self) -> String {
         format!("page_{}.data", self.pid)
     }
 
     /// Write a whole page to disk
     ///
     /// ```rust
+    /// use bufferpool::Bufferpool;
+    ///
     /// let mut bpool = Bufferpool::new();
     ///
     /// let page_arc = bpool.create_page();
@@ -86,6 +88,21 @@ impl Page {
     }
 
     /// Read a page from disk
+    ///
+    /// ```rust
+    /// use bufferpool::Bufferpool;
+    ///
+    /// let mut bpool = Bufferpool::new();
+    ///
+    /// let page_arc = bpool.create_page();
+    /// let mut page = page_arc.lock().unwrap();
+    ///
+    /// // Set the 0th value to 100
+    /// page.set_value(0, 100);
+    /// page.write_page();
+    ///
+    /// // TODO: Add a read page and test it
+    /// ```
     ///
     /// Read functions are for pulling a Page from disk and does not mutate the state of the Page
     pub fn read_page(&self) -> [i64; 512] {

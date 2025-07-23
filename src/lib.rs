@@ -50,7 +50,20 @@ impl Page {
         format!("page_{}.data", self.pid)
     }
 
-    // WRITE functions are for writing a Page from disk and not changing any state
+    /// Write a whole page to disk
+    ///
+    /// ```rust
+    /// let mut bpool = Bufferpool::new();
+    ///
+    /// let page_arc = bpool.create_page();
+    /// let mut page = page_arc.lock().unwrap();
+    ///
+    /// // Set the 0th value to 100
+    /// page.set_value(0, 100);
+    /// page.write_page();
+    /// ```
+    ///
+    /// Write functions are for writing a Page from disk and not changing any state
     pub fn write_page(&self) {
         let filename = self.get_page_path();
         let file = File::create(filename);
@@ -72,7 +85,9 @@ impl Page {
         }
     }
 
-    // READ functions are for pulling a Page from disk
+    /// Read a page from disk
+    ///
+    /// Read functions are for pulling a Page from disk and does not mutate the state of the Page
     pub fn read_page(&self) -> [i64; 512] {
         let filename = self.get_page_path();
         let mut file = File::open(filename).expect("Should open file.");
@@ -85,7 +100,7 @@ impl Page {
         return values;
     }
 
-    // SET functions are for changing internal state of a Page
+    /// Set functions are for changing internal state of a Page
     pub fn set_value(&mut self, index: usize, value: i64) {
         if let Some(d) = &mut self.data {
             d[index] = value;
@@ -94,12 +109,12 @@ impl Page {
         self.index += 1;
     }
 
-    // SET functions are for changing internal state of a Page
+    /// Set functions are for changing internal state of a Page
     pub fn set_all_values(&mut self, input: [i64; 512]) {
         self.data = Some(input);
     }
 
-    // GET functions are for getting internal state of a Page
+    /// Get functions are for getting internal state of a Page
     pub fn get_value(&self, index: usize) -> Option<i64> {
         if let Some(d) = self.data {
             return Some(d[index]);

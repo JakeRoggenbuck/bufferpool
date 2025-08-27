@@ -16,3 +16,10 @@ This is still a work in progress, so expect some updates!
 ### Goals
 
 This bufferpool will at first be asynchronous, but I will later make it async to improve performance. Part of this will be to test how much faster a concurrent bufferpool will be.
+
+### Databse Series
+
+This is a part of a larger series of projects related to building database systems:
+
+- https://github.com/JakeRoggenbuck/RedoxQL
+- https://github.com/JakeRoggenbuck/index
